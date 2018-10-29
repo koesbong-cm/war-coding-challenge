@@ -12,12 +12,17 @@ If you have never played War before, the rules are simple:
 6. The player with the higher card takes both of the cards played and moves them to their discard stack
 7. If the two cards played are of equal value, then there is a "war"
 
-There are a couple of tasks for you to do here:
+There are a couple of required tasks for you to do here:
 
 * We think that the code in `war.js` can be made cleaner, we'd love to see how you would refactor it
 * The current code doesn't have the "war" functionality yet, where the two cards played are of equal value. Please add the following requirement: 
   - In this scenario, both players will pick up 3 more cards from the top of their deck 
-  - They compare the third card they picked up and whoever has the higher card value takes all 8 cards
-  - If they're still of the same value, repeat these steps
+  - The players compare the third card they picked up and whoever has the higher card value takes all 8 cards
+  - If the cards are still of the same value, repeat these steps
+
+Bonus tasks if time allows:
+
+* Suggest/Add new product improvements
+* Improve the test suites
 
 For these tasks, we would like for you to timebox your effort to 2 hours at the most.
