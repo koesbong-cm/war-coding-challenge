@@ -1,78 +1,112 @@
-var deck = [];
-var suits = ['Diamonds', 'Clubs', 'Hearts','Spades'];
-var values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
-var player1Hand = [];
-var player2Hand = [];
-var player1Discard = [];
-var player2Discard = [];
+class Player {
+  constructor() {
+    this.hand = [];
+    this.discard = [];
+  }
 
-function createDeck() {
-  for (var i = 0; i < suits.length; i++) {
-    for (var j = 0; j < values.length; j++) {
-      deck.push({
-        suit: suits[i],
-        value: values[j],
-        weight: j + 1,
-        toString: function() {
-          return this.value + ' of ' + this.suit;
-        }
-      })
-    }
+  receiveCard(card) {
+    this.hand.push(card);
+  }
+
+  receiveDiscard(cards) {
+    this.discard.push(...cards);
+  }
+
+  drawCard() {
+    return this.hand.shift();
+  }
+
+  score() {
+    return this.discard.length;
   }
 }
 
-function shuffleDeck() {
-  var copy = [];
-  var n = deck.length;
-  var i;
+class Deck {
+  constructor() {
+    this.create();
+  }
 
-  while (n) {
-    i = Math.floor(Math.random() * deck.length);
+  create() {
+    let suits = ['Diamonds', 'Clubs', 'Hearts','Spades'];
+    let values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
 
-    if (i in deck) {
-      copy.push(deck[i]);
-      delete deck[i];
-      n--;
+    this.cards = [];
+    for (var i = 0; i < suits.length; i++) {
+      for (var j = 0; j < values.length; j++) {
+        this.cards.push({ suit: suits[i], value: values[j], weight: j + 1 });
+      }
     }
   }
 
-  deck = copy.slice();
-  return deck;
+  shuffle() {
+    for(let i = 0; i < this.cards.length; i++) {
+      let j = Math.floor(Math.random() * this.cards.length);
+      let cardi = this.cards[i];
+      let cardj = this.cards[j];
+      this.cards[i] = cardj;
+      this.cards[j] = cardi;
+    }
+  }
+
+  drawCard() {
+    return this.cards.shift();
+  }
 }
 
-function drawCard() {
-  return deck.shift();
-}
+class WarGame {
+  constructor() {
+    this.player1 = new Player();
+    this.player2 = new Player();
+    this.deck = new Deck();
+  }
 
-function dealCards() {
-  for (var i = 0, j = deck.length; i < j; i++) {
-    var card = drawCard();
+  dealCards() {
+    let i = 0;
+    let card;
 
-    if (i % 2 === 0) {
-      player1Hand.unshift(card);
+    this.deck.shuffle();
+
+    while(card = this.deck.drawCard()) {
+      if(i % 2 === 0) {
+        this.player1.receiveCard(card);
+      } else {
+        this.player2.receiveCard(card);
+      }
+      i++;
+    }
+  }
+
+  playRound() {
+    const { winner, stack } = this.playWar();
+    winner.receiveDiscard(stack);
+  }
+
+  playWar(stack = [], war = false) {
+    let p1CardWeight, p2CardWeight, winner;
+    let p1Stack = [];
+    let p2Stack = [];
+    let cardsToDraw = (war) ? 3 : 1;
+
+    for(let i = 0; i < cardsToDraw; i++) {
+      p1Stack.unshift(this.player1.drawCard());
+      p2Stack.unshift(this.player2.drawCard());
+    }
+
+    stack = [...stack, ...p1Stack, ...p2Stack];
+
+    p1CardWeight = p1Stack[0].weight;
+    p2CardWeight = p2Stack[0].weight;
+
+    if(p1CardWeight === p2CardWeight) {
+      let war = this.playWar(stack, true);
+      winner = war.winner;
+      stack = war.stack;
+    } else if(p1CardWeight > p2CardWeight) {
+      winner = this.player1;
     } else {
-      player2Hand.unshift(card);
+      winner = this.player2;
     }
-  }
-}
 
-function getPlayer1Score() {
-  return player1Discard.length;
-}
-
-function getPlayer2Score() {
-  return player2Discard.length;
-}
-
-function playCard() {
-  var p1Card = player1Hand.shift();
-  var p2Card = player2Hand.shift();
-
-  if (p1Card.weight > p2Card.weight){
-    player1Discard.push(p1Card);
-    player1Discard.push(p2Card);
-  } else {
-    player2Discard.push(p1Card);
-    player2Discard.push(p2Card);
+    return { winner, stack };
   }
 }

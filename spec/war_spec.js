@@ -1,66 +1,90 @@
-describe('War', function() {
-  var currentDeck;
+describe('War', () => {
+  let game;
 
-  it('should be able to create a new deck', function() {
-    createDeck();
-    
-    expect(deck.length).toEqual(52);
+  let cardsArray = (weights) => {
+    return weights.map((w) => {
+      return { weight: w };
+    });
+  }
+
+  let cardsWeights = (cards) => {
+    return cards.map((card) => {
+      return card.weight;
+    });
+  }
+
+  beforeEach(() => {
+    game = new WarGame();
+    game.dealCards();
   });
 
-  it('should be able to shuffle a deck', function() {
-    currentDeck = deck.slice();
-    shuffleDeck();
-    expect(deck[0].toString()).not.toEqual(currentDeck[0].toString());
+  describe('card dealing', () => {
+    it('deals same amount of cards to both players', () => {
+      expect(game.player1.hand.length).toEqual(26);
+      expect(game.player2.hand.length).toEqual(26);
+    });
 
-    currentDeck = deck.slice();
-    shuffleDeck();
-    shuffleDeck();
-    expect(deck[0].toString()).not.toEqual(currentDeck[0].toString());
+    it('deals shuffled cards to both players', () => {
+      let newGame = new WarGame();
+      newGame.dealCards();
+      expect(game.player1.hand).not.toEqual(newGame.player1.hand);
+    });
   });
 
-  it('should be able to draw a card', function () {
-    drawCard();
-    expect(deck.length).toEqual(51);
+  describe('game play', () => {
+    describe('when no card values matches', () => {
+      beforeEach(() => {
+        game.player1.hand = cardsArray([6, 3]);
+        game.player2.hand = cardsArray([8, 5]);
+        game.playRound();
+      });
 
-    drawCard();
-    expect(deck.length).toEqual(50);
+      it('draws top cards from both player decks', () => {
+        expect(game.player1.hand).toEqual(cardsArray([3]));
+        expect(game.player2.hand).toEqual(cardsArray([5]));
+      });
+
+      it('sends card to winning player discard deck', () => {
+        expect(game.player1.discard).toEqual([]);
+        expect(cardsWeights(game.player2.discard)).toEqual([6, 8]);
+      });
+
+      it('scores correctly', () => {
+        expect(game.player1.score()).toEqual(0);
+        expect(game.player2.score()).toEqual(2);
+      });
+    });
+
+    describe('when cards have same value on same play', () => {
+      beforeEach(() => {
+        game.player1.hand = cardsArray([3, 4, 5, 6, 9]);
+        game.player2.hand = cardsArray([3, 4, 5, 8, 9]);
+        game.playRound();
+      });
+
+      it('draws next 3 cards and use last one for comparison', () => {
+        expect(game.player1.discard).toEqual([]);
+        expect(cardsWeights(game.player2.discard).sort()).toEqual([3, 4, 5, 6, 3, 4, 5, 8].sort());
+      });
+
+      it('scores correctly', () => {
+        expect(game.player1.score()).toEqual(0);
+        expect(game.player2.score()).toEqual(8);
+      });
+    });
+
+    describe('when cards have same value multiple times on same play', () => {
+      beforeEach(() => {
+        game.player1.hand = cardsArray([1, 3, 4, 5, 6, 9, 5, 7]);
+        game.player2.hand = cardsArray([2, 3, 4, 5, 6, 9, 5, 6]);
+        game.playRound();
+        game.playRound();
+      });
+
+      it('scores correctly', () => {
+        expect(game.player1.score()).toEqual(14);
+        expect(game.player2.score()).toEqual(2);
+      });
+    });
   });
-
-  it('should be able to deal cards to 2 players', function() {
-    deck = currentDeck.slice();
-    dealCards();
-
-    expect(player1Hand.length).toEqual(26);
-    expect(player2Hand.length).toEqual(26);
-    expect(deck.length).toEqual(0);
-  });
-
-  it('should be able to perform game play', function() {
-    // reset player 1 and player 2 hands
-    player1Hand = [
-      {
-        suit: 'Hearts',
-        value: 'Ace',
-        weight: 13
-      }
-    ];
-
-    player2Hand = [
-      {
-        suit: 'Clubs',
-        value: '8',
-        weight: 7
-      }
-    ];
-
-    playCard();
-
-    expect(player1Discard.length).toEqual(2);
-    expect(player2Discard.length).toEqual(0);
-  });
-
-  it('should be able to show player scores', function() {
-    expect(getPlayer1Score()).toEqual(2);
-    expect(getPlayer2Score()).toEqual(0);
-  })
 });
